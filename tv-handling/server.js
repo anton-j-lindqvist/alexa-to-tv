@@ -16,15 +16,6 @@ const server = http.createServer(async (req, res) => {
   let isTimedOut = false;
 
   // Start a safety timer for this specific request
-  const timer = setTimeout(() => {
-    isTimedOut = true;
-    console.error('Request timed out before TV operation finished.');
-
-    if (!res.headersSent) {
-      res.writeHead(504, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ error: 'TV response timed out' }));
-    }
-  }, TIMEOUT_MS);
 
   try {
     // Läser in och parsar inkommande JSON automatiskt

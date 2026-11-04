@@ -14,6 +14,8 @@ export function sendKey(keyData) {
       url += `&token=${AUTH_TOKEN}`;
     }
 
+    console.log(keyData.count);
+
     const ws = new WebSocket(url, {
       rejectUnauthorized: false,
       handshakeTimeout: 5000 // 5 sekunder timeout om TV:n inte svarar
@@ -31,7 +33,7 @@ export function sendKey(keyData) {
     };
 
     ws.on('open', () => {
-      console.log("Connected to tv");
+      console.log(`[TV] Sending ${keyData.key} ${keyData.count} times.`);
     });
 
     ws.on('message', (data) => {
@@ -46,29 +48,31 @@ export function sendKey(keyData) {
             console.log('=============================================\n');
             AUTH_TOKEN = response.data.token;
           }
+        }
+
+        let sent = 0;
+
+        const interval = setInterval(function () {
+          ws.send(JSON.stringify(payload));
+          sent++;
 
           console.log(`[TV] Skickade ${keyData.key}!`);
-        }
+
+          if (sent >= keyData.count) {
+            clearInterval(interval);
+            setTimeout(function () {
+              ws.close();
+              resolve();
+            }, 100);
+          }
+        }, 150);
       } catch (err) {
         reject(err);
       }
     });
 
     ws.on('connect', () => {
-      let sent = 0;
 
-      const interval = setInterval(function () {
-        ws.send(JSON.stringify(payload));
-        sent++;
-
-        if (sent >= keyData.count) {
-          clearInterval(interval);
-          setTimeout(function () {
-            ws.close();
-            resolve();
-          }, 100);
-        }
-      }, 150);
     })
 
     ws.on('error', (err) => {
