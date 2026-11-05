@@ -81,3 +81,40 @@ export function sendKey(keyData) {
     });
   });
 }
+
+export function launchApp(appId) {
+  return new Promise((resolve, reject) => {
+
+    const options = {
+      hostname: TV_IP,
+      port: 8001,
+      path: `/api/v2/applications/${appId}`,
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      timeout: 3000
+    };
+
+    const req = http.request(options, (res) => {
+      if (res.statusCode >= 200 && res.statusCode < 300) {
+        console.log(`[TV] App ${appId} startades!`);
+        resolve();
+      } else {
+        reject(new Error(`Kunde inte starta app. Statuskod: ${res.statusCode}`));
+      }
+    });
+
+    req.on('error', (err) => {
+      console.error('[TV] REST-fel vid start av app:', err.message);
+      reject(err);
+    });
+
+    req.on('timeout', () => {
+      req.destroy();
+      reject(new Error('Timeout mot TV'));
+    });
+
+    req.end();
+  });
+}

@@ -184,6 +184,28 @@ const TvVolumeHandler = {
     }
 }
 
+const AppIntentHandler = {
+    canHandle(handlerInput) {
+        return Alexa.getRequestType(handlerInput.requestEnvelope) === 'IntentRequest'
+            && Alexa.getIntentName(handlerInput.requestEnvelope) === 'TVVolumeIntent';
+    },
+    async handle(handlerInput) {
+        let option = getSlotCanonicalValue(handlerInput.requestEnvelope.request.intent.slots.app);
+        let speakOutput = 'Starting ' + option;
+
+        try {
+            await sendTvCommand(option);
+        } catch (error) {
+            console.error('Failed:', error);
+            speakOutput = 'Could not reach the TV server.';
+        }
+
+        return handlerInput.responseBuilder
+            .speak(speakOutput)
+            .getResponse();
+    }
+}
+
 
 /**
  * Generic error handling to capture any syntax or routing errors. If you receive an error
@@ -212,6 +234,7 @@ const ErrorHandler = {
  * */
 exports.handler = Alexa.SkillBuilders.custom()
     .addRequestHandlers(
+        AppIntentHandler,
         TvPowerHandler,
         TvVolumeHandler,
         LaunchRequestHandler,
